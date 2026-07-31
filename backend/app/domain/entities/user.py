@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 
 
@@ -19,7 +18,7 @@ class User:
     role: GlobalRole
     is_active: bool = True
     is_mfa_enabled: bool = False
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     @classmethod
     def create(

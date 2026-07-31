@@ -1,4 +1,5 @@
-from typing import List, Literal, Optional
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     ENVIRONMENT: Literal["development", "testing", "staging", "production"] = "development"
     DEBUG: bool = False
-    GIT_COMMIT: Optional[str] = "dev-commit"
+    GIT_COMMIT: str | None = "dev-commit"
 
     # API Prefix & Security
     API_V1_STR: str = "/api/v1"
@@ -29,7 +30,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30    # 30 days
 
     # CORS Origins
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000"
@@ -53,8 +54,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     # External Provider Keys (Optional for Sprint 1 foundation)
-    OPENAI_API_KEY: Optional[str] = None
-    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
 
 
 settings = Settings()

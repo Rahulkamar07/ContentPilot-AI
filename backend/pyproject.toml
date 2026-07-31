@@ -14,7 +14,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+ignore = ["E501", "B008"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -26,5 +26,6 @@ exclude = ["alembic/", "venv/", "tests/"]
 minversion = "8.0"
 addopts = "-ra -q --cov=app --cov-report=term-missing"
 testpaths = ["tests"]
+pythonpath = "."
 asyncio_mode = "auto"
 python_files = ["test_*.py"]

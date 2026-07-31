@@ -1,8 +1,10 @@
-from typing import Any, Dict
-from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import Any
 from uuid import UUID
+
+from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.entities.user import GlobalRole, User
 from app.domain.entities.workspace import PlanTier, Workspace, WorkspaceMember, WorkspaceRole
@@ -41,7 +43,7 @@ class WorkspaceModel(Base, UUIDMixin, TimestampMixin):
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     owner_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     plan_tier: Mapped[str] = mapped_column(String(20), nullable=False, default=PlanTier.STARTER.value)
-    settings: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
 
     def to_entity(self) -> Workspace:
         return Workspace(

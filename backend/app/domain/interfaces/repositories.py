@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Sequence
 from uuid import UUID
+
 from app.domain.entities.user import User
 from app.domain.entities.workspace import Workspace, WorkspaceMember
 
@@ -9,11 +9,11 @@ class UserRepositoryInterface(ABC):
     """Abstract contract enforcing user repository isolation."""
 
     @abstractmethod
-    async def get_by_id(self, user_id: UUID) -> Optional[User]:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         pass
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         pass
 
     @abstractmethod
@@ -25,11 +25,11 @@ class WorkspaceRepositoryInterface(ABC):
     """Abstract contract enforcing workspace repository isolation."""
 
     @abstractmethod
-    async def get_by_id(self, workspace_id: UUID) -> Optional[Workspace]:
+    async def get_by_id(self, workspace_id: UUID) -> Workspace | None:
         pass
 
     @abstractmethod
-    async def get_by_slug(self, slug: str) -> Optional[Workspace]:
+    async def get_by_slug(self, slug: str) -> Workspace | None:
         pass
 
     @abstractmethod

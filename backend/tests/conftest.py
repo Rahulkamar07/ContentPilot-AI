@@ -1,6 +1,8 @@
+from collections.abc import AsyncGenerator
+
 import pytest
-from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
 

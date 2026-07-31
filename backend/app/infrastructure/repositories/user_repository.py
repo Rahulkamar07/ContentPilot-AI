@@ -1,5 +1,5 @@
-from typing import Optional
 from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,13 +14,13 @@ class UserRepository(UserRepositoryInterface):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_by_id(self, user_id: UUID) -> Optional[User]:
+    async def get_by_id(self, user_id: UUID) -> User | None:
         stmt = select(UserModel).where(UserModel.id == user_id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         stmt = select(UserModel).where(UserModel.email == email.lower().strip())
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()

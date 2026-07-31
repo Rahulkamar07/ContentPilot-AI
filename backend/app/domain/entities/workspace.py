@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 
@@ -26,8 +26,8 @@ class Workspace:
     slug: str
     owner_id: UUID
     plan_tier: PlanTier = PlanTier.STARTER
-    settings: Dict[str, Any] = field(default_factory=dict)
-    created_at: Optional[datetime] = None
+    settings: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime | None = None
 
     @classmethod
     def create(cls, name: str, slug: str, owner_id: UUID) -> "Workspace":
@@ -49,4 +49,4 @@ class WorkspaceMember:
     workspace_id: UUID
     user_id: UUID
     role: WorkspaceRole
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None

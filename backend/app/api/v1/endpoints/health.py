@@ -1,8 +1,9 @@
-from typing import Any, Dict
+from typing import Any
+
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as aioredis
 
 from app.core.config import settings
 from app.core.database import get_db_session
@@ -17,7 +18,7 @@ router = APIRouter()
     summary="Liveness Probe",
     description="Returns 200 OK if the FastAPI web application process is running."
 )
-async def liveness_probe() -> Dict[str, Any]:
+async def liveness_probe() -> dict[str, Any]:
     return {
         "status": "HEALTHY",
         "service": settings.PROJECT_NAME,
@@ -34,7 +35,7 @@ async def liveness_probe() -> Dict[str, Any]:
 async def readiness_probe(
     db: AsyncSession = Depends(get_db_session),
     redis: aioredis.Redis = Depends(get_redis)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     db_healthy = False
     redis_healthy = False
 
@@ -70,7 +71,7 @@ async def readiness_probe(
     summary="Application Version Information",
     description="Returns application release version, git commit hash, and environment details."
 )
-async def version_info() -> Dict[str, Any]:
+async def version_info() -> dict[str, Any]:
     return {
         "project": settings.PROJECT_NAME,
         "version": settings.VERSION,

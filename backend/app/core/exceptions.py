@@ -1,6 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+
 from app.core.logging import logger
 
 
@@ -11,7 +13,7 @@ class ContentPilotException(Exception):
         message: str,
         code: str = "INTERNAL_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[Any] = None
+        details: Any | None = None
     ) -> None:
         self.message = message
         self.code = code
