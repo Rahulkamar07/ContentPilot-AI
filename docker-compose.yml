@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: ankane/pgvector:v0.7.0-pg16
+    container_name: contentpilot_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: contentpilot_db
+      POSTGRES_USER: contentpilot_user
+      POSTGRES_PASSWORD: SecureDbPassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U contentpilot_user -d contentpilot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: contentpilot_redis
+    restart: always
+    command: redis-server --requirepass SecureRedisPassword123!
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "SecureRedisPassword123!", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contentpilot_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+asyncpg://contentpilot_user:SecureDbPassword123!@postgres:5432/contentpilot_db
+      REDIS_URL: redis://:SecureRedisPassword123!@redis:6379/0
+      SECRET_KEY: super-secret-jwt-signing-key-minimum-32-characters-long
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contentpilot_celery_worker
+    restart: always
+    command: celery -A app.workers.celery_app worker -l info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://contentpilot_user:SecureDbPassword123!@postgres:5432/contentpilot_db
+      REDIS_URL: redis://:SecureRedisPassword123!@redis:6379/0
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: contentpilot_celery_beat
+    restart: always
+    command: celery -A app.workers.celery_app beat -l info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://contentpilot_user:SecureDbPassword123!@postgres:5432/contentpilot_db
+      REDIS_URL: redis://:SecureRedisPassword123!@redis:6379/0
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: contentpilot_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
