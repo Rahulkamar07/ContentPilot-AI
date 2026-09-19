@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies import ensure_workspace_membership, get_current_user, validate_user_exists
+from app.api.v1.dependencies import (
+    ensure_workspace_membership,
+    get_current_user,
+    validate_user_exists,
+)
 from app.api.v1.schemas import (
     WorkspaceCreateRequest,
     WorkspaceMemberAddRequest,
@@ -29,7 +33,9 @@ async def create_workspace(
     slug = payload.slug.lower().strip()
     existing = await session.execute(select(WorkspaceModel).where(WorkspaceModel.slug == slug))
     if existing.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Workspace slug already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Workspace slug already exists"
+        )
 
     workspace = WorkspaceModel(
         name=payload.name.strip(),

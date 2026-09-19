@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import { api, Article, QueuePost, Source } from "@/core/api";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -19,7 +19,7 @@ export default function QueuePage() {
   const [category, setCategory] = useState("general");
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!activeWorkspaceId) return;
     try {
       const [sourcesRes, articlesRes, postsRes] = await Promise.all([
@@ -33,7 +33,7 @@ export default function QueuePage() {
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Failed to load queue data");
     }
-  };
+  }, [activeWorkspaceId]);
 
   useEffect(() => {
     hydrateAuth();
@@ -45,7 +45,7 @@ export default function QueuePage() {
       return;
     }
     void loadData();
-  }, [isAuthenticated, activeWorkspaceId]);
+  }, [isAuthenticated, activeWorkspaceId, loadData]);
 
   const createSource = async (event: FormEvent) => {
     event.preventDefault();

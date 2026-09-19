@@ -7,7 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies import ensure_workspace_membership, get_current_user, get_workspace_id_header
+from app.api.v1.dependencies import (
+    ensure_workspace_membership,
+    get_current_user,
+    get_workspace_id_header,
+)
 from app.api.v1.schemas import (
     ArticleResponse,
     GeneratePostRequest,
@@ -35,8 +39,12 @@ async def create_news_source(
     session: AsyncSession = Depends(get_db_session),
 ) -> NewsSourceResponse:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
-    await ensure_workspace_membership(workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
+    await ensure_workspace_membership(
+        workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"}
+    )
 
     existing = await session.execute(
         select(NewsSourceModel).where(
@@ -45,7 +53,9 @@ async def create_news_source(
         )
     )
     if existing.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Source URL already exists")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Source URL already exists"
+        )
 
     source = NewsSourceModel(
         workspace_id=workspace_id,
@@ -67,7 +77,9 @@ async def list_news_sources(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[NewsSourceResponse]:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
     await ensure_workspace_membership(workspace_id, current_user.id, session)
 
     result = await session.execute(
@@ -86,8 +98,12 @@ async def ingest_source(
     session: AsyncSession = Depends(get_db_session),
 ) -> IngestSourceResponse:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
-    await ensure_workspace_membership(workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
+    await ensure_workspace_membership(
+        workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"}
+    )
 
     task_result = ingest_rss_source_task.delay(str(workspace_id), str(source_id))
     return IngestSourceResponse(task_id=task_result.id, status="QUEUED")
@@ -100,7 +116,9 @@ async def list_articles(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[ArticleResponse]:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
     await ensure_workspace_membership(workspace_id, current_user.id, session)
 
     result = await session.execute(
@@ -121,8 +139,12 @@ async def process_article_with_ai(
     session: AsyncSession = Depends(get_db_session),
 ) -> SocialPostResponse:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
-    await ensure_workspace_membership(workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
+    await ensure_workspace_membership(
+        workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"}
+    )
 
     post = await generate_social_post(
         session,
@@ -143,7 +165,9 @@ async def list_queue_posts(
     session: AsyncSession = Depends(get_db_session),
 ) -> list[SocialPostResponse]:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
     await ensure_workspace_membership(workspace_id, current_user.id, session)
 
     result = await session.execute(
@@ -164,8 +188,12 @@ async def approve_queue_post(
     session: AsyncSession = Depends(get_db_session),
 ) -> SocialPostResponse:
     if workspace_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required")
-    await ensure_workspace_membership(workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="X-Workspace-ID header required"
+        )
+    await ensure_workspace_membership(
+        workspace_id, current_user.id, session, {"OWNER", "ADMIN", "EDITOR"}
+    )
 
     result = await session.execute(
         select(SocialPostModel).where(
