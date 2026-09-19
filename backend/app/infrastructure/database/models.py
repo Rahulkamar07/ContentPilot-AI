@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,6 +14,7 @@ from app.infrastructure.database.base import Base, TimestampMixin, UUIDMixin
 
 class UserModel(Base, UUIDMixin, TimestampMixin):
     """SQLAlchemy ORM model for Users."""
+
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
@@ -21,7 +23,7 @@ class UserModel(Base, UUIDMixin, TimestampMixin):
     role: Mapped[str] = mapped_column(String(20), nullable=False, default=GlobalRole.USER.value)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     is_mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    mfa_secret: Mapped[str] = mapped_column(String(128), nullable=True)
+    mfa_secret: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     def to_entity(self) -> User:
         return User(
@@ -37,6 +39,7 @@ class UserModel(Base, UUIDMixin, TimestampMixin):
 
 class WorkspaceModel(Base, UUIDMixin, TimestampMixin):
     """SQLAlchemy ORM model for Workspaces."""
+
     __tablename__ = "workspaces"
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -59,10 +62,9 @@ class WorkspaceModel(Base, UUIDMixin, TimestampMixin):
 
 class WorkspaceMemberModel(Base, UUIDMixin, TimestampMixin):
     """SQLAlchemy ORM model for Workspace RBAC Memberships."""
+
     __tablename__ = "workspace_members"
-    __table_args__ = (
-        UniqueConstraint("workspace_id", "user_id", name="uq_workspace_user"),
-    )
+    __table_args__ = (UniqueConstraint("workspace_id", "user_id", name="uq_workspace_user"),)
 
     workspace_id: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
@@ -80,3 +82,81 @@ class WorkspaceMemberModel(Base, UUIDMixin, TimestampMixin):
             role=WorkspaceRole(self.role),
             created_at=self.created_at,
         )
+
+
+class NewsSourceModel(Base, UUIDMixin, TimestampMixin):
+    """Configured RSS/news source per workspace."""
+
+    __tablename__ = "news_sources"
+    __table_args__ = (UniqueConstraint("workspace_id", "url", name="uq_news_source_workspace_url"),)
+
+    workspace_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    category: Mapped[str] = mapped_column(String(60), nullable=False, default="general")
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ArticleModel(Base, UUIDMixin, TimestampMixin):
+    """Normalized article record ingested from sources."""
+
+    __tablename__ = "articles"
+    __table_args__ = (UniqueConstraint("workspace_id", "url", name="uq_article_workspace_url"),)
+
+    workspace_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    source_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("news_sources.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    category: Mapped[str] = mapped_column(String(60), nullable=False, default="general")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SocialPostModel(Base, UUIDMixin, TimestampMixin):
+    """Queue item generated from articles and published to social channels."""
+
+    __tablename__ = "social_posts"
+
+    workspace_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    article_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    platform: Mapped[str] = mapped_column(String(30), nullable=False, default="instagram")
+    status: Mapped[str] = mapped_column(String(30), nullable=False, default="PENDING_REVIEW")
+    caption: Mapped[str] = mapped_column(Text, nullable=False)
+    image_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    external_post_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class SocialAccountModel(Base, UUIDMixin, TimestampMixin):
+    """Workspace social account connection details."""
+
+    __tablename__ = "social_accounts"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "platform", "account_identifier", name="uq_social_account"),
+    )
+
+    workspace_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    platform: Mapped[str] = mapped_column(String(30), nullable=False)
+    account_identifier: Mapped[str] = mapped_column(String(120), nullable=False)
+    access_token: Mapped[str] = mapped_column(Text, nullable=False)
+    refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

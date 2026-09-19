@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health
+from app.api.v1.endpoints import auth, content, health, workspaces
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["System & Health Probes"])
+api_router.include_router(auth.router)
+api_router.include_router(workspaces.router)
+api_router.include_router(content.router)
