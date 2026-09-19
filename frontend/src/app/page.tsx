@@ -24,11 +24,23 @@ export default function Home() {
 
         <div className="flex flex-wrap justify-center gap-4 pt-4">
           <Link
-            href="/overview"
+            href="/login"
             className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-xl transition-all shadow-lg hover:shadow-primary/25 space-x-2"
           >
-            <span>Launch Dashboard Shell</span>
+            <span>Start MVP Workflow</span>
             <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/workspaces"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border rounded-xl transition-all"
+          >
+            Workspaces
+          </Link>
+          <Link
+            href="/queue"
+            className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-foreground bg-card hover:bg-muted border border-border rounded-xl transition-all"
+          >
+            Queue Board
           </Link>
           <a
             href="http://localhost:8000/docs"
